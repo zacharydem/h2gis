@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.CharBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.Calendar;
@@ -68,7 +68,7 @@ public class DbaseFileReader {
 
     private DbaseFileHeader header;
     private ReadBufferManager buffer;
-    private FileChannel channel;
+    private SeekableByteChannel channel;
     private CharBuffer charBuffer;
     private CharsetDecoder decoder;
     private char[] fieldTypes;
@@ -81,7 +81,7 @@ public class DbaseFileReader {
      * @param channel The readable channel to use.
      * @throws java.io.IOException If an error occurs while initializing.
      */
-    public DbaseFileReader(FileChannel channel, String forceEncoding)
+    public DbaseFileReader(SeekableByteChannel channel, String forceEncoding)
             throws IOException {
         this.channel = channel;
 

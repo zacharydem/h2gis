@@ -23,22 +23,22 @@ package org.h2gis.functions.io.utility;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 
 public final class ReadBufferManager {
 
         private int bufferSize;
         private ByteBuffer buffer;
-        private FileChannel channel;
+        private SeekableByteChannel channel;
         private long windowStart;
         private long positionInFile;
 
         /**
          * Instantiates a ReadBufferManager to read the specified channel
          *
-         * @param channel {@link FileChannel}
+         * @param channel {@link SeekableByteChannel}
          */
-        public ReadBufferManager(FileChannel channel) throws IOException {
+        public ReadBufferManager(SeekableByteChannel channel) throws IOException {
                 this(channel, 1024 * 32);
         }
 
@@ -46,10 +46,10 @@ public final class ReadBufferManager {
          * Instantiates a ReadBufferManager to read the specified channel. The
          * specified bufferSize is the size of the channel content cached in memory
          *
-         * @param channel {@link FileChannel}
+         * @param channel {@link SeekableByteChannel}
          * @param bufferSize buffer size
          */
-        public ReadBufferManager(FileChannel channel, int bufferSize)
+        public ReadBufferManager(SeekableByteChannel channel, int bufferSize)
                 throws IOException {
                 this.channel = channel;
                 buffer = ByteBuffer.allocate(0);

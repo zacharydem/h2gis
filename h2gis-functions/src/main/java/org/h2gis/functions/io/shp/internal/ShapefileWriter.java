@@ -25,7 +25,7 @@ import org.locationtech.jts.geom.Geometry;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 
 /**
  * ShapefileWriter allows for the storage of geometries in esris shp format.
@@ -50,9 +50,9 @@ import java.nio.channels.FileChannel;
  */
 public class ShapefileWriter {
 
-    private FileChannel shpChannel;
+    private SeekableByteChannel shpChannel;
 
-    private FileChannel shxChannel;
+    private SeekableByteChannel shxChannel;
 
     private WriteBufferManager shapeBuffer;
 
@@ -71,10 +71,10 @@ public class ShapefileWriter {
     /**
      * Creates a new instance of ShapeFileWriter
      *
-     * @param shpChannel shp {@link FileChannel}
-     * @param shxChannel shx {@link FileChannel}
+     * @param shpChannel shp {@link SeekableByteChannel}
+     * @param shxChannel shx {@link SeekableByteChannel}
      */
-    public ShapefileWriter(FileChannel shpChannel, FileChannel shxChannel)
+    public ShapefileWriter(SeekableByteChannel shpChannel, SeekableByteChannel shxChannel)
             throws IOException {
         this.shpChannel = shpChannel;
         this.shxChannel = shxChannel;
@@ -83,7 +83,7 @@ public class ShapefileWriter {
     /**
      * @return The Shape File Channel
      */
-    public FileChannel getShpChannel() {
+    public SeekableByteChannel getShpChannel() {
         return shpChannel;
     }
 

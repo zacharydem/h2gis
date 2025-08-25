@@ -27,7 +27,6 @@ import org.h2.result.SearchRow;
 import org.h2.value.*;
 import org.h2gis.api.FileDriver;
 import org.locationtech.jts.geom.Envelope;
-import org.locationtech.jts.io.WKTReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wololo.flatgeobuf.ColumnMeta;
@@ -43,7 +42,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.NavigableMap;
@@ -61,7 +60,7 @@ public class FGBDriver implements FileDriver {
     private int geometryFieldIndex = 0;
     private int srid = 0;
     private FileInputStream fis;
-    private FileChannel fileChannel;
+    private SeekableByteChannel channel;
     private Value[] currentRow = new Value[0];
     private long rowIdPrevious = -1;
 
@@ -82,7 +81,7 @@ public class FGBDriver implements FileDriver {
     public void initDriverFromFile(File fgbFile) throws IOException {
         // Read columns from files metadata
         fis = new FileInputStream(fgbFile);
-        this.fileChannel = fis.getChannel();
+        this.channel = fis.getChannel();
         headerMeta = HeaderMeta.read(fis);
         fieldCount = headerMeta.columns.size() + 1;
         long treeSize =
@@ -139,7 +138,7 @@ public class FGBDriver implements FileDriver {
     }
 
     public Cursor queryIndex(Envelope queryEnvelope) throws IOException {
-        fileChannel.position(headerMeta.offset);
+        channel.position(headerMeta.offset);
         PackedRTree.SearchResult searchResult = PackedRTree.search(fis, 0, (int)headerMeta.featuresCount,
                 headerMeta.indexNodeSize, queryEnvelope);
         return new FGBDriverCursor(searchResult, this);
@@ -151,8 +150,8 @@ public class FGBDriver implements FileDriver {
      */
     public void cacheFeatureAddressFromIndex() throws IOException {
         if(headerMeta.indexNodeSize > 0) {
-            fileChannel.position(headerMeta.offset);
-            LittleEndianDataInputStream data = new LittleEndianDataInputStream(Channels.newInputStream(fileChannel));
+            channel.position(headerMeta.offset);
+            LittleEndianDataInputStream data = new LittleEndianDataInputStream(Channels.newInputStream(channel));
             long[] fids = new long[(int) headerMeta.featuresCount];
             for (long id = 0; id < fids.length; id++) {
                 fids[(int) id] = id;
@@ -169,12 +168,12 @@ public class FGBDriver implements FileDriver {
      * @param featureAddress Feature address in the file relative to the first feature
      * @return values from the a flatgeobuffer feature
      */
-    public static Value[] getFieldsFromFileLocation(FileChannel fileChannel, long featureAddress, long featuresOffset,
+    public static Value[] getFieldsFromFileLocation(SeekableByteChannel channel, long featureAddress, long featuresOffset,
                                                     HeaderMeta headerMeta, int geometryFieldIndex) throws IOException {
         Value[] values = new Value[headerMeta.columns.size()+1];
-        fileChannel.position(featuresOffset + featureAddress);
+        channel.position(featuresOffset + featureAddress);
         // Read the current row from the input stream
-        LittleEndianDataInputStream data = new LittleEndianDataInputStream(Channels.newInputStream(fileChannel));
+        LittleEndianDataInputStream data = new LittleEndianDataInputStream(Channels.newInputStream(channel));
         int featureSize = data.readInt();
         byte[] bytes = new byte[featureSize];
         data.readFully(bytes);
@@ -247,36 +246,36 @@ public class FGBDriver implements FileDriver {
     public Value getField(long rowId, int columnId) throws IOException {
         try {
             if(rowId == 0) {
-                fileChannel.position(featuresOffset);
+                channel.position(featuresOffset);
                 rowIdPrevious = -1;
             } else if (rowId > rowIdPrevious + 1 || rowId < rowIdPrevious) {
                 // We have to seek to the desired location
                 Integer lowerKey = rowIndexToFileLocation.floorKey((int)rowId);
                 if(lowerKey == null) {
-                    fileChannel.position(featuresOffset);
+                    channel.position(featuresOffset);
                     rowIdPrevious = -1;
                 } else {
-                    fileChannel.position(rowIndexToFileLocation.get(lowerKey));
+                    channel.position(rowIndexToFileLocation.get(lowerKey));
                     rowIdPrevious = lowerKey - 1;
                 }
                 // Make our way until rowId
                 while (rowIdPrevious + 1 < rowId) {
-                    LittleEndianDataInputStream data = new LittleEndianDataInputStream(Channels.newInputStream(fileChannel));
+                    LittleEndianDataInputStream data = new LittleEndianDataInputStream(Channels.newInputStream(channel));
                     int featureSize = data.readInt();
-                    fileChannel.position(fileChannel.position() + featureSize);
+                    channel.position(channel.position() + featureSize);
                     rowIdPrevious++;
                     if(cacheRowAddress) {
-                        rowIndexToFileLocation.put((int) rowIdPrevious + 1, fileChannel.position());
+                        rowIndexToFileLocation.put((int) rowIdPrevious + 1, channel.position());
                     }
                 }
             }
             if (rowIdPrevious + 1 == rowId) {
                 // Read the current row from the input stream
                 rowIdPrevious = rowId;
-                currentRow = getFieldsFromFileLocation(fileChannel,fileChannel.position()-featuresOffset,
+                currentRow = getFieldsFromFileLocation(channel, channel.position()-featuresOffset,
                         featuresOffset, headerMeta, geometryFieldIndex);
                 if(cacheRowAddress) {
-                    rowIndexToFileLocation.put((int) rowId + 1, fileChannel.position());
+                    rowIndexToFileLocation.put((int) rowId + 1, channel.position());
                 }
             }
             return currentRow[columnId];
@@ -344,7 +343,7 @@ public class FGBDriver implements FileDriver {
 
         private boolean fetchRow() {
             try {
-                Value[] values = FGBDriver.getFieldsFromFileLocation(fgbDriver.fileChannel,
+                Value[] values = FGBDriver.getFieldsFromFileLocation(fgbDriver.channel,
                         searchResult.hits.get(position).offset, fgbDriver.getFeaturesOffset(), fgbDriver.getHeader(),
                         fgbDriver.getGeometryFieldIndex());
                 currentRow = new DefaultRow(values);

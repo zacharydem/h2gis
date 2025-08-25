@@ -27,8 +27,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SeekableByteChannel;
 
 /**
  * The general use of this class is:
@@ -51,7 +51,7 @@ public class ShapefileReader {
 
         private ShapeHandler handler;
         private ShapefileHeader header;
-        private FileChannel channel;
+        private SeekableByteChannel channel;
         private ReadBufferManager buffer;
         private ShapeType fileShapeType = ShapeType.UNDEFINED;
 
@@ -63,7 +63,7 @@ public class ShapefileReader {
          * @throws java.io.IOException If problems arise.
          * @throws ShapefileException If for some reason the file contains invalid records.
          */
-        public ShapefileReader(FileChannel channel) throws IOException,
+        public ShapefileReader(SeekableByteChannel channel) throws IOException,
                 ShapefileException {
                 this.channel = channel;
                 init();

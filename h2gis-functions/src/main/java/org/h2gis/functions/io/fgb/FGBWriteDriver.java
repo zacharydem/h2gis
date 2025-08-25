@@ -45,7 +45,7 @@ import java.math.BigInteger;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.sql.Connection;
@@ -347,8 +347,8 @@ public class FGBWriteDriver {
             envelopes.forEach(x -> extend.expand(x.nodeItem));
             PackedRTree.hilbertSort(envelopes, extend);
             PackedRTree packedRTree = new PackedRTree(Lists.reverse(envelopes), packedRTreeNodeSize);
-            FileChannel fileChannel = outputStream.getChannel();
-            fileChannel.position(endHeaderPosition);
+            SeekableByteChannel channel = outputStream.getChannel();
+            channel.position(endHeaderPosition);
             packedRTree.write(outputStream);
         }
 

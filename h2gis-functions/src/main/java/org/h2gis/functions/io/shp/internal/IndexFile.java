@@ -24,8 +24,8 @@ import org.h2gis.functions.io.utility.ReadBufferManager;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SeekableByteChannel;
 
 /**
  * IndexFile parser for .shx files.<br>
@@ -40,7 +40,7 @@ import java.nio.channels.ReadableByteChannel;
  * @see "http://svn.geotools.org/geotools/tags/2.3.1/plugin/shapefile/src/org/geotools/data/shapefile/shp/IndexFile.java"
  */
 public class IndexFile {
-	private FileChannel channel;
+	private SeekableByteChannel channel;
 
 	private ReadBufferManager buf = null;
 
@@ -59,7 +59,7 @@ public class IndexFile {
 	 *            The channel to read from.
 	 * @throws java.io.IOException If an error occurs.
 	 */
-	public IndexFile(FileChannel channel)
+	public IndexFile(SeekableByteChannel channel)
 			throws IOException {
 		readHeader(channel);
 		this.channel = channel;

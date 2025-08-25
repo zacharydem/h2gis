@@ -23,7 +23,7 @@ package org.h2gis.functions.io.utility;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 
 /**
  * Class to write files using nio.
@@ -34,7 +34,7 @@ public final class WriteBufferManager {
 
 	private static final int BUFFER_SIZE = 1024 * 128;
 
-	private FileChannel channel;
+	private SeekableByteChannel channel;
 
 	private ByteBuffer buffer;
 
@@ -42,9 +42,9 @@ public final class WriteBufferManager {
 	 * Creates a new WriteBufferManager that writes to the specified file
 	 * channel
 	 *
-	 * @param channel {@link FileChannel}
+	 * @param channel {@link SeekableByteChannel}
 	 */
-	public WriteBufferManager(FileChannel channel) throws IOException {
+	public WriteBufferManager(SeekableByteChannel channel) throws IOException {
 		this.channel = channel;
 		buffer = ByteBuffer.allocate(BUFFER_SIZE);
 	}

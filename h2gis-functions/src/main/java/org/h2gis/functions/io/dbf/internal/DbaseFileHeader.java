@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
 
@@ -455,7 +455,7 @@ public class DbaseFileHeader {
 	 *            in).
 	 * @throws java.io.IOException If errors occur while reading.
 	 */
-	public void readHeader(FileChannel channel,String forceEncoding) throws IOException {
+	public void readHeader(SeekableByteChannel channel, String forceEncoding) throws IOException {
         if(forceEncoding != null && !forceEncoding.isEmpty()) {
             fileEncoding = forceEncoding;
         }

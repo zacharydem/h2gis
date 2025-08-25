@@ -27,7 +27,7 @@ import org.h2gis.utilities.JDBCUtilities;
 import org.h2gis.utilities.TableLocation;
 
 import java.io.*;
-import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.sql.*;
 import java.util.regex.Matcher;
@@ -289,8 +289,8 @@ public class TSVDriverFunction implements DriverFunction {
 
             int AVERAGE_NODE_SIZE = 500;
             FileInputStream fis = new FileInputStream(fileName);
-            FileChannel fc = fis.getChannel();
-            long fileSize = fc.size();
+            SeekableByteChannel channel = fis.getChannel();
+            long fileSize = channel.size();
             // Given the file size and an average node file size.
             // Skip how many nodes in order to update progression at a step of 1%
             long readFileSizeEachNode = Math.max(1, (fileSize / AVERAGE_NODE_SIZE) / 100);
@@ -347,7 +347,7 @@ public class TSVDriverFunction implements DriverFunction {
                     if (average_row_size++ % readFileSizeEachNode == 0) {
                         // Update Progress
                         try {
-                            progress.setStep((int) (((double) fc.position() / fileSize) * 100));
+                            progress.setStep((int) (((double) channel.position() / fileSize) * 100));
                         } catch (IOException ex) {
                             // Ignore
                         }
